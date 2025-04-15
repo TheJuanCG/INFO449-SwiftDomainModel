@@ -58,9 +58,14 @@ public struct Money {
         // Normalizing to USD
         if self.currency != "USD" {
             // need to convert to usd and then get the new value
-            var usdAmount = currencyExchange["\(self.currency), USD"].self!(self.amount)
+            let usdAmount = currencyExchange["\(self.currency), USD"].self!(self.amount)
+            //print("InC: \(currency), OldC: \(self.currency), oldAm: \(self.amount)")
+            if (currency == "USD"){
+                return Money(amount: usdAmount, currency: "USD")
+            }
             
-            var newAmount = currencyExchange["USD, \(currency)"].self!(usdAmount)
+            
+            let newAmount = currencyExchange["USD, \(currency)"].self!(usdAmount)
             
             let res = Money(amount: newAmount, currency: currency)
             return res
@@ -68,7 +73,7 @@ public struct Money {
         }
         
         // Don't need to normalize, just from USD to new Value
-        var newAmount = currencyExchange["\(self.currency), \(currency)"].self!(amount)
+        let newAmount = currencyExchange["\(self.currency), \(currency)"].self!(amount)
         
         let res = Money(amount: newAmount, currency: currency)
         return res
@@ -108,9 +113,58 @@ public struct Money {
 // Job
 //
 public class Job {
+    var title: String
+    var type: JobType
+    
     public enum JobType {
         case Hourly(Double)
         case Salary(UInt)
+    }
+    
+    init(title: String, type: JobType) {
+        self.title = title
+        self.type = type
+    }
+    
+    func calculateIncome(_ hours: Int) -> Int {
+        // Return money made in calendar year
+        // Hourly == rate*2000
+        // For hourly, 50 * hours worked per week
+        switch type {
+        case .Hourly(let double):
+            return Int(round(double * Double(hours)))
+        case .Salary(let uInt):
+            return Int(uInt)
+        }
+    }
+    
+    func raise(byAmount: Int) {
+        // This should be for salor
+        switch type {
+        case .Hourly(let double):
+            return
+        case .Salary(let uInt):
+            type = JobType.Salary(uInt + UInt(byAmount))
+        }
+    }
+    
+    func raise(byAmount: Double) {
+        // This should be for salor
+        switch type {
+        case .Hourly(let double):
+            type = JobType.Hourly(double + byAmount)
+        case .Salary(let uInt):
+            return
+        }
+    }
+    
+    func raise(byPercent: Double) {
+        switch type {
+        case .Hourly(let double):
+            type = JobType.Hourly(double * (1.0 + byPercent))
+        case .Salary(let uInt):
+            type = JobType.Salary(UInt(round(Double(uInt)*(1.0 + byPercent))))
+        }
     }
 }
 
@@ -118,10 +172,51 @@ public class Job {
 // Person
 //
 public class Person {
+    var firstName: String
+    var lastName: String
+    var age: Int
+    var job: Job?
+    var spouse: Person?
+    
+    
+    
+    init(firstName: String,
+         lastName: String,
+         age: Int,
+         job: Job,
+         spouse: Person) {
+        
+        self.firstName = firstName
+        self.lastName = lastName
+        self.age = age
+        self.job = job
+        self.spouse = spouse
+    }
+    
+    init(firstName: String,
+         lastName: String,
+         age: Int) {
+        
+        self.firstName = firstName
+        self.lastName = lastName
+        self.age = age
+        self.job = nil
+        self.spouse = nil
+    }
+    
+    func toString() -> String {
+        return "Person: firstName:\(firstName) lastName:\(lastName) age:\(age) job:\(job) spouse:\(spouse)"
+    }
 }
 
 ////////////////////////////////////
 // Family
 //
 public class Family {
+    var members: [Person]
+    
+    init(spouse1: Person, spouse2: Person) {
+        self.members = [spouse1, spouse2]
+        
+    }
 }
