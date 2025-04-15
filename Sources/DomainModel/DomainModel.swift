@@ -138,6 +138,16 @@ public class Job {
         }
     }
     
+    func calculateIncome() -> Int {
+        // Same as previous one but without hours input (assume 40 hours)
+        switch type {
+        case .Hourly(let double):
+            return Int(round(double * 40.0 * 50.0))
+        case .Salary(let uInt):
+            return Int(uInt)
+        }
+    }
+    
     func raise(byAmount: Int) {
         // This should be for salor
         switch type {
@@ -175,8 +185,30 @@ public class Person {
     var firstName: String
     var lastName: String
     var age: Int
-    var job: Job?
-    var spouse: Person?
+    private var _job: Job?
+    private var _spouse: Person?
+    // if less than 16 can't have job
+    
+    var spouse: Person? {
+        set {
+            if spouse == nil && age > 15{
+                _spouse = newValue
+            }
+        }
+        get{
+            return _spouse
+        }
+    }
+    
+    var job: Job? {
+        get {return _job}
+        
+        set {
+            if age > 15 {
+                _job = newValue
+            }
+        }
+    }
     
     
     
@@ -205,8 +237,10 @@ public class Person {
     }
     
     func toString() -> String {
-        return "Person: firstName:\(firstName) lastName:\(lastName) age:\(age) job:\(job) spouse:\(spouse)"
+        return "[Person: firstName:\(firstName) lastName:\(lastName) age:\(age) job:\(job) spouse:\(spouse)]"
     }
+    
+
 }
 
 ////////////////////////////////////
@@ -214,9 +248,39 @@ public class Person {
 //
 public class Family {
     var members: [Person]
+    private var maxAgeSpouse: Int
     
     init(spouse1: Person, spouse2: Person) {
         self.members = [spouse1, spouse2]
+        spouse1.spouse = spouse2
+        spouse2.spouse = spouse1
         
+        maxAgeSpouse = max(spouse1.age, spouse2.age)
+    }
+
+    func haveChild(_ child: Person) -> Bool {
+        // Return true if possible, false if not
+        
+        // Need to check age of at least 1 spouse be 21
+        // Just iterate through household and check if anyone is above 21 and spouse != nil?
+        // Or just have a saved variable when creating a family
+        if maxAgeSpouse > 21 {
+            members.append(child)
+            return true
+        }
+        
+        return false
+    }
+    
+    func householdIncome() -> Int {
+        var res = 0
+        
+        for member in members {
+            if let income = member.job?.calculateIncome() {
+                res += income
+            }
+        }
+        print("Family Income: \(res)")
+        return res
     }
 }
